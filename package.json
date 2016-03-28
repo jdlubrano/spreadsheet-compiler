@@ -1,27 +1,26 @@
 {
-  "name": "electron-quick-start",
-  "version": "1.0.0",
-  "description": "A minimal Electron application",
+  "name": "spreadsheet-compiler",
+  "version": "0.0.1",
+  "description": "A minimal Electron application to combine Excel (.xlsx) files",
   "main": "main.js",
   "scripts": {
     "start": "electron main.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/atom/electron-quick-start.git"
+    "url": "git+https://github.com/jdlubrano/spreadsheet-compiler"
   },
   "keywords": [
     "Electron",
-    "quick",
-    "start",
-    "tutorial"
+    "Excel",
+    "xslx"
   ],
   "author": "GitHub",
-  "license": "CC0-1.0",
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/atom/electron-quick-start/issues"
+    "url": "https://github.com/jdlubrano/spreadsheet-compiler/issues"
   },
-  "homepage": "https://github.com/atom/electron-quick-start#readme",
+  "homepage": "https://github.com/jdlubrano/spreadsheet-compiler#readme",
   "devDependencies": {
     "electron-prebuilt": "^0.36.0"
   }
