@@ -179,17 +179,19 @@ var SpreadsheetCompiler = React.createClass({
         { name: 'Spreadsheets', extensions: ['xlsx'] }
       ]
     });
-    var files = this.state.files.slice(0);
-    var sizeSum = files.reduce((p, v) => p + v.size, 0);
-    console.log(sizeSum);
-    var spreadsheet = {
-      name: saved,
-      size: Math.round(sizeSum / 1000).toString() + ' KB',
-      id: this.state.spreadsheets.length
-    }
-    this.setState({
-      spreadsheets: this.state.spreadsheets.concat([spreadsheet]),
-      files: []
+    if(!saved) return;
+    fakeCompile().then(() => {
+      var files = this.state.files.slice(0);
+      var sizeSum = files.reduce((p, v) => p + v.size, 0);
+      var spreadsheet = {
+        name: saved,
+        size: Math.round(sizeSum / 1000).toString() + ' KB',
+        id: this.state.spreadsheets.length
+      }
+      this.setState({
+        spreadsheets: this.state.spreadsheets.concat([spreadsheet]),
+        files: []
+      });
     });
   },
   render: function() {
@@ -229,14 +231,15 @@ function statFile(filepath) {
   });
 }
 
-function createSpreadsheet(filepath) {
-  alert(filepath);
-}
+var compilingDialog = document.getElementById('dialog');
 
-/*
-fileForm.addEventListener('submit', (evt) => {
-  evt.preventDefault();
-  evt.stopPropagation();
-});
-*/
+function fakeCompile() {
+  return new Promise((resolve) => {
+    compilingDialog.className = '';
+    setTimeout(() => {
+      compilingDialog.className = 'hidden';
+      resolve();
+    }, 3000);
+  });
+}
 

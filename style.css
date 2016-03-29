@@ -10,3 +10,24 @@ html, body {
   cursor: pointer;
 }
 
+.hidden {
+  display: none !important;
+}
+
+#dialog {
+  background: #ffffff;
+  padding: 15px;
+  position: fixed;
+  min-height: 80%;
+  top: 5%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  box-shadow: 0 0 5px 2px #CCC;
+  border-radius: 10px;
+  text-align: center;
+}
+
+#dialog img {
+  margin: auto:
+}
+
