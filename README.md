@@ -1,3 +1,7 @@
+# WARNING
+This app doesn't really do anything.  It was simply a sandbox for me to
+try out [Electron](http://electron.atom.io).
+
 # electron-quick-start
 
 **Clone and run for a quick way to see an Electron in action.**
