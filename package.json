@@ -4,7 +4,8 @@
   "description": "A minimal Electron application to combine Excel (.xlsx) files",
   "main": "main.js",
   "scripts": {
-    "start": "babel -o build/app.js app.js && electron main.js"
+    "start": "babel -o build/app.js app.js && electron main.js",
+    "package": "electron-packager . --all --out dist"
   },
   "repository": {
     "type": "git",
