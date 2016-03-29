@@ -4,73 +4,235 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _reactDom = require('react-dom');
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-(function () {
-  'use strict';
+var FileEntry = _react2.default.createClass({
+  displayName: 'FileEntry',
 
-  var fs = require('fs');
-  var path = require('path');
-  var remote = require('remote');
-  var dialog = remote.require('dialog');
+  render: function render() {
+    var file = this.props.file;
+    var filesize = Math.round(file.size / 1000).toString() + ' KB';
+    return _react2.default.createElement(
+      'tr',
+      null,
+      _react2.default.createElement(
+        'td',
+        null,
+        file.name
+      ),
+      _react2.default.createElement(
+        'td',
+        null,
+        filesize
+      ),
+      _react2.default.createElement('td', null)
+    );
+  }
+});
 
-  var filesTable = document.getElementById('files-table');
-  var tbody = filesTable.querySelector('tbody');
+var FilesTable = _react2.default.createClass({
+  displayName: 'FilesTable',
 
-  function statFile(filepath) {
-    return new Promise(function (resolve, reject) {
-      fs.stat(filepath, function (err, stats) {
-        if (err) {
-          reject(err);
-        } else {
-          stats.name = path.basename(filepath);
-          resolve(stats);
-        }
-      });
+  render: function render() {
+    var fileList = this.props.files.map(function (file) {
+      return _react2.default.createElement(FileEntry, { key: file.name, file: file });
     });
+    return _react2.default.createElement(
+      'table',
+      { className: 'table-striped' },
+      _react2.default.createElement(
+        'thead',
+        null,
+        _react2.default.createElement(
+          'tr',
+          null,
+          _react2.default.createElement(
+            'th',
+            null,
+            'File Name'
+          ),
+          _react2.default.createElement(
+            'th',
+            null,
+            'Size'
+          ),
+          _react2.default.createElement(
+            'th',
+            null,
+            'Remove'
+          )
+        )
+      ),
+      _react2.default.createElement(
+        'tbody',
+        null,
+        fileList
+      )
+    );
   }
+});
 
-  function addToTable(file) {
-    var row = document.createElement('tr');
-    var filename = document.createElement('td');
-    filename.innerHTML = file.name;
-    var filesize = document.createElement('td');
-    filesize.innerHTML = Math.round(file.size / 1000).toString() + ' KB';
-    row.appendChild(filename);
-    row.appendChild(filesize);
-    tbody.appendChild(row);
+var SpreadsheetSidebar = _react2.default.createClass({
+  displayName: 'SpreadsheetSidebar',
+
+  render: function render() {
+    return _react2.default.createElement(
+      'div',
+      { className: 'pane-sm sidebar padded-more' },
+      _react2.default.createElement(
+        'p',
+        null,
+        'No spreadsheets have been compiled'
+      )
+    );
   }
+});
 
-  function updateTable(filenames) {
-    tbody.innerHTML = '';
-    var promises = filenames.map(statFile);
-    Promise.all(promises).then(function (stats) {
-      stats.forEach(addToTable);
-    }).catch(function (err) {
-      alert(err);
-    });
-  }
+var FilesForm = _react2.default.createClass({
+  displayName: 'FilesForm',
 
-  function createSpreadsheet(filepath) {
-    alert(filepath);
-  }
-
-  var chooseButton = document.getElementById('choose');
-
-  chooseButton.addEventListener('click', function (evt) {
+  openFileDialog: function openFileDialog() {
     dialog.showOpenDialog({
       properties: ['openFile', 'multiSelections'],
       filters: [{ name: 'Spreadsheets', extensions: ['xlsx'] }]
-    }, updateTable);
-  });
+    }, this.props.handleFilesChoose);
+  },
+  doSubmit: function doSubmit(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.props.handleSubmit(e);
+  },
+  render: function render() {
+    return _react2.default.createElement(
+      'form',
+      { action: '#', onSubmit: this.doSubmit },
+      _react2.default.createElement(
+        'div',
+        { className: 'form-group' },
+        _react2.default.createElement(
+          'button',
+          {
+            className: 'btn btn-primary',
+            type: 'button',
+            onClick: this.openFileDialog },
+          'Add Files'
+        ),
+        _react2.default.createElement(
+          'button',
+          { className: 'btn btn-positive', type: 'submit' },
+          'Compile'
+        ),
+        _react2.default.createElement(
+          'button',
+          {
+            className: 'btn btn-negative',
+            type: 'button',
+            onClick: this.props.handleRemoveAll },
+          'Remove All'
+        )
+      )
+    );
+  }
+});
 
-  var fileForm = document.getElementById('files');
+var FilesMenu = _react2.default.createClass({
+  displayName: 'FilesMenu',
 
-  fileForm.addEventListener('submit', function (evt) {
-    evt.preventDefault();
-    evt.stopPropagation();
-    var saved = dialog.showSaveDialog({
-      filters: [{ name: 'Spreadsheets', extensions: ['xlsx'] }]
-    }, createSpreadsheet);
+  addFiles: function addFiles(filenames) {
+    var _this = this;
+
+    var promises = filenames.map(statFile);
+    Promise.all(promises).then(function (stats) {
+      _this.props.handleFilesAdded(stats);
+    }).catch(function (err) {
+      alert(err);
+    });
+  },
+  render: function render() {
+    return _react2.default.createElement(
+      'div',
+      { className: 'pane padded-more' },
+      _react2.default.createElement(
+        'p',
+        { className: 'instructions' },
+        'Click the button below to select the spreadsheet files that you wish to compile into a single spreadsheet.  Once selected, you can click the compile button and choose a destination for your compiled spreadsheet.  All spreadsheets compiled in this session will appear in the list on the left.'
+      ),
+      _react2.default.createElement(
+        'div',
+        { className: 'form-group' },
+        _react2.default.createElement(FilesTable, { files: this.props.files })
+      ),
+      _react2.default.createElement(FilesForm, {
+        handleFilesChoose: this.addFiles,
+        handleSubmit: this.props.handleCompile })
+    );
+  }
+});
+
+var SpreadsheetCompiler = _react2.default.createClass({
+  displayName: 'SpreadsheetCompiler',
+
+  getInitialState: function getInitialState() {
+    return {
+      files: [],
+      spreadsheets: []
+    };
+  },
+  updateFiles: function updateFiles(files) {
+    this.setState({ files: files });
+  },
+  compileSpreadsheets: function compileSpreadsheets() {
+    alert('compiling');
+  },
+  render: function render() {
+    return _react2.default.createElement(
+      'div',
+      { className: 'pane-group' },
+      _react2.default.createElement(SpreadsheetSidebar, { spreadsheets: this.state.spreadsheets }),
+      _react2.default.createElement(FilesMenu, {
+        handleFilesAdded: this.updateFiles,
+        files: this.state.files,
+        handleCompile: this.compileSpreadsheets })
+    );
+  }
+});
+
+_reactDom2.default.render(_react2.default.createElement(SpreadsheetCompiler, null), document.getElementById('window-content'));
+
+var fs = require('fs');
+var path = require('path');
+var remote = require('remote');
+var dialog = remote.require('dialog');
+
+function statFile(filepath) {
+  return new Promise(function (resolve, reject) {
+    fs.stat(filepath, function (err, stats) {
+      if (err) {
+        reject(err);
+      } else {
+        stats.name = path.basename(filepath);
+        resolve(stats);
+      }
+    });
   });
-})();
+}
+
+function createSpreadsheet(filepath) {
+  alert(filepath);
+}
+
+/*
+fileForm.addEventListener('submit', (evt) => {
+  evt.preventDefault();
+  evt.stopPropagation();
+  var saved = dialog.showSaveDialog({
+    filters: [
+      { name: 'Spreadsheets', extensions: ['xlsx'] }
+    ]
+  }, createSpreadsheet);
+});
+*/

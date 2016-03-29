@@ -8,43 +8,9 @@
   </head>
   <body>
     <div class="window">
-      <div class="window-content">
-        <div class="pane-group">
-          <div class="pane-sm sidebar padded-more">
-            <p>No spreadsheets have been compiled</p>
-          </div>
-          <div class="pane padded-more">
-            <p class="instructions">
-              Click the button below to select the spreadsheet files that
-              you wish to compile into a single spreadsheet.  Once selected,
-              you can click the compile button and choose a destination for
-              your compiled spreadsheet.  All spreadsheets compiled in this
-              session will appear in the list on the left.
-            </p>
-            <form id="files">
-              <div class="form-group">
-                <table id="files-table" class="table-striped">
-                  <thead>
-                    <tr>
-                      <th>File Name</th>
-                      <th>Size</th>
-                      <th>Remove</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
-              <div class="form-group">
-                <button class="btn btn-primary" id="choose" type="button">Add Files</button>
-                <button class="btn btn-positive" id="compile" type="submit">Compile</button>
-                <button class="btn btn-default" id="cancel" type="button">Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
+      <div id="window-content" class="window-content"></div>
     </div>
     <script src="build/app.js"></script>
   </body>
 </html>
+
