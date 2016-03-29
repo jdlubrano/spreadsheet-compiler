@@ -13,6 +13,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var FileEntry = _react2.default.createClass({
   displayName: 'FileEntry',
 
+  remove: function remove() {
+    this.props.handleRemove(this.props.file);
+  },
   render: function render() {
     var file = this.props.file;
     var filesize = Math.round(file.size / 1000).toString() + ' KB';
@@ -29,7 +32,11 @@ var FileEntry = _react2.default.createClass({
         null,
         filesize
       ),
-      _react2.default.createElement('td', null)
+      _react2.default.createElement(
+        'td',
+        null,
+        _react2.default.createElement('span', { onClick: this.remove, className: 'remove-file icon icon-cancel' })
+      )
     );
   }
 });
@@ -38,8 +45,13 @@ var FilesTable = _react2.default.createClass({
   displayName: 'FilesTable',
 
   render: function render() {
+    var _this = this;
+
     var fileList = this.props.files.map(function (file) {
-      return _react2.default.createElement(FileEntry, { key: file.name, file: file });
+      return _react2.default.createElement(FileEntry, {
+        handleRemove: _this.props.handleRemoveFile,
+        key: file.name,
+        file: file });
     });
     return _react2.default.createElement(
       'table',
@@ -76,6 +88,56 @@ var FilesTable = _react2.default.createClass({
   }
 });
 
+var SpreadsheetEntry = _react2.default.createClass({
+  displayName: 'SpreadsheetEntry',
+
+  render: function render() {
+    var spreadsheet = this.props.spreadsheet;
+    return _react2.default.createElement(
+      'li',
+      { className: 'list-group-item' },
+      _react2.default.createElement('span', { className: 'media-object pull-left icon icon-doc-text' }),
+      _react2.default.createElement(
+        'div',
+        { className: 'media-body' },
+        _react2.default.createElement(
+          'strong',
+          null,
+          spreadsheet.name
+        ),
+        _react2.default.createElement(
+          'p',
+          null,
+          spreadsheet.size
+        )
+      )
+    );
+  }
+});
+
+var SpreadsheetList = _react2.default.createClass({
+  displayName: 'SpreadsheetList',
+
+  render: function render() {
+    var rendered = _react2.default.createElement(
+      'p',
+      null,
+      'No spreadsheets have been compiled.'
+    );
+    var spreadsheets = this.props.spreadsheets;
+    if (spreadsheets.length) {
+      rendered = _react2.default.createElement(
+        'ul',
+        { className: 'list-group' },
+        spreadsheets.map(function (spreadsheet) {
+          return _react2.default.createElement(SpreadsheetEntry, { key: spreadsheet.id, spreadsheet: spreadsheet });
+        })
+      );
+    }
+    return rendered;
+  }
+});
+
 var SpreadsheetSidebar = _react2.default.createClass({
   displayName: 'SpreadsheetSidebar',
 
@@ -83,11 +145,7 @@ var SpreadsheetSidebar = _react2.default.createClass({
     return _react2.default.createElement(
       'div',
       { className: 'pane-sm sidebar padded-more' },
-      _react2.default.createElement(
-        'p',
-        null,
-        'No spreadsheets have been compiled'
-      )
+      _react2.default.createElement(SpreadsheetList, { spreadsheets: this.props.spreadsheets })
     );
   }
 });
@@ -143,11 +201,11 @@ var FilesMenu = _react2.default.createClass({
   displayName: 'FilesMenu',
 
   addFiles: function addFiles(filenames) {
-    var _this = this;
+    var _this2 = this;
 
     var promises = filenames.map(statFile);
     Promise.all(promises).then(function (stats) {
-      _this.props.handleFilesAdded(stats);
+      _this2.props.handleFilesAdded(stats);
     }).catch(function (err) {
       alert(err);
     });
@@ -164,7 +222,9 @@ var FilesMenu = _react2.default.createClass({
       _react2.default.createElement(
         'div',
         { className: 'form-group' },
-        _react2.default.createElement(FilesTable, { files: this.props.files })
+        _react2.default.createElement(FilesTable, {
+          handleRemoveFile: this.props.handleRemoveFile,
+          files: this.props.files })
       ),
       _react2.default.createElement(FilesForm, {
         handleFilesChoose: this.addFiles,
@@ -182,11 +242,34 @@ var SpreadsheetCompiler = _react2.default.createClass({
       spreadsheets: []
     };
   },
-  updateFiles: function updateFiles(files) {
-    this.setState({ files: files });
+  removeFile: function removeFile(file) {
+    var idx = this.state.files.indexOf(file);
+    this.state.files.splice(idx, 1);
+    this.setState({ files: this.state.files });
+  },
+  addFiles: function addFiles(files) {
+    this.setState({
+      files: this.state.files.concat(files)
+    });
   },
   compileSpreadsheets: function compileSpreadsheets() {
-    alert('compiling');
+    var saved = dialog.showSaveDialog({
+      filters: [{ name: 'Spreadsheets', extensions: ['xlsx'] }]
+    });
+    var files = this.state.files.slice(0);
+    var sizeSum = files.reduce(function (p, v) {
+      return p + v.size;
+    }, 0);
+    console.log(sizeSum);
+    var spreadsheet = {
+      name: saved,
+      size: Math.round(sizeSum / 1000).toString() + ' KB',
+      id: this.state.spreadsheets.length
+    };
+    this.setState({
+      spreadsheets: this.state.spreadsheets.concat([spreadsheet]),
+      files: []
+    });
   },
   render: function render() {
     return _react2.default.createElement(
@@ -194,7 +277,8 @@ var SpreadsheetCompiler = _react2.default.createClass({
       { className: 'pane-group' },
       _react2.default.createElement(SpreadsheetSidebar, { spreadsheets: this.state.spreadsheets }),
       _react2.default.createElement(FilesMenu, {
-        handleFilesAdded: this.updateFiles,
+        handleRemoveFile: this.removeFile,
+        handleFilesAdded: this.addFiles,
         files: this.state.files,
         handleCompile: this.compileSpreadsheets })
     );
@@ -229,10 +313,5 @@ function createSpreadsheet(filepath) {
 fileForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
   evt.stopPropagation();
-  var saved = dialog.showSaveDialog({
-    filters: [
-      { name: 'Spreadsheets', extensions: ['xlsx'] }
-    ]
-  }, createSpreadsheet);
 });
 */

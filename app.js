@@ -4,6 +4,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 var FileEntry = React.createClass({
+  remove: function() {
+    this.props.handleRemove(this.props.file);
+  },
   render: function() {
     var file = this.props.file;
     var filesize = Math.round(file.size / 1000).toString() + ' KB';
@@ -11,7 +14,9 @@ var FileEntry = React.createClass({
       <tr>
         <td>{file.name}</td>
         <td>{filesize}</td>
-        <td></td>
+        <td>
+          <span onClick={this.remove} className="remove-file icon icon-cancel"></span>
+        </td>
       </tr>
     );
   }
@@ -19,8 +24,13 @@ var FileEntry = React.createClass({
 
 var FilesTable = React.createClass({
   render: function() {
-    var fileList = this.props.files.map(function(file) {
-      return <FileEntry key={file.name} file={file}></FileEntry>;
+    var fileList = this.props.files.map((file) => {
+      return (
+        <FileEntry
+          handleRemove={this.props.handleRemoveFile}
+          key={file.name}
+          file={file} />
+      );
     });
     return (
       <table className="table-striped">
@@ -39,11 +49,43 @@ var FilesTable = React.createClass({
   }
 });
 
+var SpreadsheetEntry = React.createClass({
+  render: function() {
+    var spreadsheet = this.props.spreadsheet;
+    return (
+      <li className="list-group-item">
+        <span className="media-object pull-left icon icon-doc-text"></span>
+        <div className="media-body">
+          <strong>{spreadsheet.name}</strong>
+          <p>{spreadsheet.size}</p>
+        </div>
+      </li>
+    );
+  }
+});
+
+var SpreadsheetList = React.createClass({
+  render: function() {
+    var rendered = <p>No spreadsheets have been compiled.</p>
+    var spreadsheets = this.props.spreadsheets;
+    if (spreadsheets.length) {
+      rendered = (
+        <ul className="list-group">
+          {spreadsheets.map((spreadsheet) => {
+            return <SpreadsheetEntry key={spreadsheet.id} spreadsheet={spreadsheet} />
+          })}
+        </ul>
+      );
+    }
+    return rendered;
+  }
+});
+
 var SpreadsheetSidebar = React.createClass({
   render: function() {
     return(
       <div className="pane-sm sidebar padded-more">
-        <p>No spreadsheets have been compiled</p>
+        <SpreadsheetList spreadsheets={this.props.spreadsheets} />
       </div>
     );
   }
@@ -102,7 +144,9 @@ var FilesMenu = React.createClass({
           session will appear in the list on the left.
         </p>
         <div className="form-group">
-          <FilesTable files={this.props.files} />
+          <FilesTable
+            handleRemoveFile={this.props.handleRemoveFile}
+            files={this.props.files} />
         </div>
         <FilesForm
           handleFilesChoose={this.addFiles}
@@ -119,18 +163,42 @@ var SpreadsheetCompiler = React.createClass({
       spreadsheets: []
     };
   },
-  updateFiles: function(files) {
-    this.setState({ files: files });
+  removeFile: function(file) {
+    var idx = this.state.files.indexOf(file);
+    this.state.files.splice(idx, 1);
+    this.setState({ files: this.state.files });
+  },
+  addFiles: function(files) {
+    this.setState({
+      files: this.state.files.concat(files)
+    });
   },
   compileSpreadsheets: function() {
-    alert('compiling');
+    var saved = dialog.showSaveDialog({
+      filters: [
+        { name: 'Spreadsheets', extensions: ['xlsx'] }
+      ]
+    });
+    var files = this.state.files.slice(0);
+    var sizeSum = files.reduce((p, v) => p + v.size, 0);
+    console.log(sizeSum);
+    var spreadsheet = {
+      name: saved,
+      size: Math.round(sizeSum / 1000).toString() + ' KB',
+      id: this.state.spreadsheets.length
+    }
+    this.setState({
+      spreadsheets: this.state.spreadsheets.concat([spreadsheet]),
+      files: []
+    });
   },
   render: function() {
     return (
       <div className="pane-group">
         <SpreadsheetSidebar spreadsheets={this.state.spreadsheets} />
         <FilesMenu
-          handleFilesAdded={this.updateFiles}
+          handleRemoveFile={this.removeFile}
+          handleFilesAdded={this.addFiles}
           files={this.state.files}
           handleCompile={this.compileSpreadsheets} />
       </div>
@@ -169,11 +237,6 @@ function createSpreadsheet(filepath) {
 fileForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
   evt.stopPropagation();
-  var saved = dialog.showSaveDialog({
-    filters: [
-      { name: 'Spreadsheets', extensions: ['xlsx'] }
-    ]
-  }, createSpreadsheet);
 });
 */
 

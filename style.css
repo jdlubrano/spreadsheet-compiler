@@ -6,3 +6,7 @@ html, body {
   margin-right: 5px;
 }
 
+.remove-file {
+  cursor: pointer;
+}
+
